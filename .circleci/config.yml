@@ -41,10 +41,18 @@ workflows:
               aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
         steps:
           - run:
-            name: "Building Frontend React App for Hubub. Running npm run build"
-            command: "npm run build"
-          - run:  "
-            name: "
+              name: "Installing NPM Packages. Running npm install"
+              command: "npm install"
+          - run:
+              name: "Building Frontend React App for Hubub. Running npm run build"
+              command: "npm run build"
+          - save_cache:
+            key: dependency-cache-{{ checksum "package.json" }}
+            paths:
+              - ./node_modules
+          - run:
+            name: "Running Frontend React App for Hubub. Running npm start"
+            command: "npm start"
       - run_tests
       - docker/publish:
           image: adwait1290/$CIRCLE_PROJECT_REPONAME
