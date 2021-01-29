@@ -30,6 +30,21 @@ workflows:
   version: 2
   build_deploy:
     jobs:
+      build:
+        docker:
+          - image: adwait1290/hubub-frontend
+            auth:
+              username: $DOCKERHUB_USERNAME
+              password: $DOCKERHUB_PASSWORD
+            aws_auth:
+              aws_access_key_id: $AWS_ACCESS_KEY_ID
+              aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+        steps:
+          - run:
+            name: "Building Frontend React App for Hubub. Running npm run build"
+            command: "npm run build"
+          - run:  "
+            name: "
       - run_tests
       - docker/publish:
           image: adwait1290/$CIRCLE_PROJECT_REPONAME
