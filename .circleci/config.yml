@@ -53,7 +53,6 @@ workflows:
           - run:
             name: "Running Frontend React App for Hubub. Running npm start"
             command: "npm start"
-      - run_tests
       - docker/publish:
           image: adwait1290/$CIRCLE_PROJECT_REPONAME
           dockerfile: dockerfile
