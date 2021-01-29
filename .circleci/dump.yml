@@ -1,0 +1,74 @@
+
+orbs:
+  docker: circleci/docker@0.5.13
+  heroku: circleci/heroku@0.0.10.
+workflows:
+  heroku_deploy:
+    jobs:
+      - build
+      - heroku/deploy-via-git: # Use the pre-configured job, deploy-via-git
+          requires:
+            - build
+          filters:
+            branches:
+              only: sequential-branch-filter
+jobs:
+  run_tests:
+    working_directory: ~/react-app
+    docker:
+      - image: circleci/node:14.15.4
+    steps:
+      - checkout
+      - run:
+          name: update-npm
+          command: 'sudo npm install -g npm@latest'
+      - restore_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+      - run:
+          name: npm-install
+          command: npm install
+      - save_cache:
+          key: dependency-cache-{{ checksum "package.json" }}
+          paths:
+            - ./node_modules
+      - run:
+          name: test
+          command: npm test
+
+workflows:
+  version: 2
+  build_deploy:
+    jobs:
+      build:
+        docker:
+          - image: adwait1290/hubub-frontend
+            auth:
+              username: $DOCKERHUB_USERNAME
+              password: $DOCKERHUB_PASSWORD
+            aws_auth:
+              aws_access_key_id: $AWS_ACCESS_KEY_ID
+              aws_secret_access_key: $AWS_SECRET_ACCESS_KEY
+        steps:
+          - run:
+              name: "Installing NPM Packages. Running npm install"
+              command: "npm install"
+          - run:
+              name: "Building Frontend React App for Hubub. Running npm run build"
+              command: "npm run build"
+          - save_cache:
+            key: dependency-cache-{{ checksum "package.json" }}
+            paths:
+              - ./node_modules
+          - run:
+            name: "Running Frontend React App for Hubub. Running npm start"
+            command: "npm start"
+      - docker/publish:
+          image: adwait1290/$CIRCLE_PROJECT_REPONAME
+          dockerfile: dockerfile
+          requires:
+            - run_tests
+            - build
+          filters:
+            branches:
+              only:
+                - main
